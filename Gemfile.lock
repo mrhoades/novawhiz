@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    novawhiz (0.0.0)
+    novawhiz (0.0.1)
       net-ssh-simple
       openstack
 
@@ -11,7 +11,6 @@ GEM
     blockenspiel (0.4.5)
     hashie (1.2.0)
     json (1.7.5)
-    json (1.7.5-java)
     net-scp (1.0.4)
       net-ssh (>= 1.99.1)
     net-ssh (2.2.2)
