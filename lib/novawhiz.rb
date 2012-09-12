@@ -43,21 +43,6 @@ class NovaWhiz
   end
 
   def run_command(creds, cmd)
-=begin
-    Net::SSH::Simple.sync do
-      r = ssh(
-        creds[:ip],
-        cmd,
-        :user => creds[:user],
-        :key_data => [ creds[:key] ])
-      if !r.success
-        "command failed on #{creds[:ip]} : #{cmd} : #{r.stdout} : #{r.stderr}"
-      end
-      puts r.stdout
-      puts r.stderr
-    end
-=end
-
     res = Net::SSH::Simple.sync do
       ssh(creds[:ip], '/bin/sh', :user => creds[:user], :key_data => [creds[:key]]) do |e,c,d|
         case e
@@ -68,12 +53,12 @@ class NovaWhiz
           # read the input line-wise (it *will* arrive fragmented!)
           (@buf ||= '') << d
           while line = @buf.slice!(/(.*)\r?\n/)
-            yield line if block_given?
+            yield line.chomp if block_given?
           end
         when :stderr
           (@buf ||= '') << d
           while line = @buf.slice!(/(.*)\r?\n/)
-            yield line if block_given?
+            yield line.chomp if block_given?
           end
         end
       end
