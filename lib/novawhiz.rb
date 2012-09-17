@@ -61,7 +61,7 @@ class NovaWhiz
 
   def run_command(creds, cmd)
     res = Net::SSH::Simple.sync do
-      ssh(creds[:ip], '/bin/sh', :user => creds[:user], :key_data => [creds[:key]]) do |e,c,d|
+      ssh(creds[:ip], '/bin/sh', :user => creds[:user], :key_data => [creds[:key]], :timeout => 3600, :global_known_hosts_file => ['/dev/null'], :user_known_hosts_file => ['/dev/null']) do |e,c,d|
         case e
         when :start
           c.send_data "#{cmd}\n"
