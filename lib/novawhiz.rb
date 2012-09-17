@@ -42,6 +42,23 @@ class NovaWhiz
     end
   end
 
+  def server_by_name(name)
+    @os.servers.each do |s|
+      return @os.server(s[:id]) if s[:name] == name
+    end
+    nil
+  end
+
+  def delete_keypair_if_exists(name)
+    kp_names = @os.keypairs.values.map { |v| v[:name] }
+    @os.delete_keypair(name) if kp_names.include? name
+  end
+
+  def delete_if_exists(name)
+    s = server_by_name name
+    s.delete! if s
+  end
+
   def run_command(creds, cmd)
     res = Net::SSH::Simple.sync do
       ssh(creds[:ip], '/bin/sh', :user => creds[:user], :key_data => [creds[:key]]) do |e,c,d|
