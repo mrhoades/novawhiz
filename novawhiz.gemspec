@@ -11,4 +11,5 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'openstack',      '>= 0'
   s.add_runtime_dependency 'net-ssh-simple', '>= 0'
+  s.add_runtime_dependency 'main',           '>= 0'
 end

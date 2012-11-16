@@ -49,6 +49,14 @@ class NovaWhiz
     nil
   end
 
+  def keypair_name(server)
+    server.key_name
+  end
+
+  def default_user(node)
+    'ubuntu'
+  end
+
   def delete_keypair_if_exists(name)
     kp_names = @os.keypairs.values.map { |v| v[:name] }
     @os.delete_keypair(name) if kp_names.include? name

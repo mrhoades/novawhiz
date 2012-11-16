@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+require 'main'
+require 'novawhiz'
+
+Main do
+
+
+  def creds
+    {
+      :username   => ENV['OS_USERNAME'],
+      :password   => ENV['OS_PASSWORD'],
+      :authtenant => ENV['OS_TENANT_NAME'],
+      :auth_url   => ENV['OS_AUTH_URL']
+    }
+  end
+
+  def run
+    STDERR.puts "must specify a subcommand. see `#{$0} help`"
+    exit 1
+  end
+
+  mode 'boot' do
+    raise 'todo'
+    def run
+      raise 'todo'
+    end
+  end
+
+  mode 'ssh' do
+    argument('name') { 'node name to ssh into' }
+    def run
+      opts = params.to_options
+      nw = NovaWhiz.new creds
+      node = nw.server_by_name opts['name']
+      exec "ssh -i ~/.ssh/keys/#{nw.keypair_name node}.pem #{nw.default_user node}@#{nw.public_ip node}"
+    end
+  end
+
+
+end
