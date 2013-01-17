@@ -21,7 +21,7 @@ class NovaWhiz
 
   def image_id(reg)
     images = @os.images.select { |i| i[:name] =~ reg }
-    raise "ambiguous/unknown image: #{reg} : #{images.inspect}" unless images.length == 1
+    raise "ambiguous/unknown image: #{reg} : #{images.inspect}" unless images.length >= 1
     images.first[:id]
   end
 
