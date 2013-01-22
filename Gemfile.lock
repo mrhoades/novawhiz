@@ -1,25 +1,35 @@
 PATH
   remote: .
   specs:
-    novawhiz (0.0.1)
+    novawhiz (0.0.8)
+      main
       net-ssh-simple
       openstack
 
 GEM
   remote: http://rubygems.org/
   specs:
+    arrayfields (4.7.4)
     blockenspiel (0.4.5)
+    chronic (0.9.0)
+    fattr (2.2.1)
     hashie (1.2.0)
-    json (1.7.5)
+    json (1.7.6)
+    main (5.1.1)
+      arrayfields (>= 4.7.4)
+      chronic (>= 0.6.2)
+      fattr (>= 2.2.0)
+      map (>= 5.1.0)
+    map (6.2.0)
     net-scp (1.0.4)
       net-ssh (>= 1.99.1)
-    net-ssh (2.2.2)
-    net-ssh-simple (1.5.4)
+    net-ssh (2.6.3)
+    net-ssh-simple (1.5.9)
       blockenspiel (~> 0.4.3)
       hashie (>= 1.1.0)
       net-scp (~> 1.0.4)
-      net-ssh (~> 2.2.1)
-    openstack (1.0.4)
+      net-ssh (~> 2.6.2)
+    openstack (1.0.7)
       json
 
 PLATFORMS

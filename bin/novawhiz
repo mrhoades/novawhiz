@@ -4,13 +4,22 @@ require 'novawhiz'
 
 Main do
 
-
   def creds
     {
-      :username   => ENV['OS_USERNAME'],
-      :password   => ENV['OS_PASSWORD'],
-      :authtenant => ENV['OS_TENANT_NAME'],
-      :auth_url   => ENV['OS_AUTH_URL']
+        # for use with openstack
+        :username   => ENV['OS_USERNAME'],
+        :password   => ENV['OS_PASSWORD'],
+        :authtenant => ENV['OS_TENANT_NAME'],
+        :auth_url   => ENV['OS_AUTH_URL'],
+        :region     => ENV['OS_REGION_NAME'],
+
+        ## for use with hpfog
+        #:provider       => ENV['PROVIDER'],
+        #:hp_account_id  => ENV['HP_ACCOUNT_ID'],
+        #:hp_secret_key  => ENV['HP_SECRET_KEY'],
+        #:hp_auth_uri    => ENV['HP_AUTH_URI'],
+        #:hp_tenant_id   => ENV['HP_TENANT_ID'],
+        #:hp_avl_zone    => ENV['HP_AVL_ZONE']
     }
   end
 
@@ -19,22 +28,92 @@ Main do
     exit 1
   end
 
+
   mode 'boot' do
-    raise 'todo'
+    argument('name') { 'node name to ssh into' }
     def run
-      raise 'todo'
+      args = params.to_options
+      opts[:name] = args['name']
+      opts[:flavor] ||= 'standard.xsmall'
+      opts[:image]  ||= /Ubuntu Precise/
+      opts[:sec_groups] ||= ['default']
+      opts[:key_name] ||= 'default'
+      opts[:region] ||= 'az-2.region-a.geo-1'
+      raise 'no name provided' if !opts[:name] or opts[:name].empty?
+      nw = NovaWhiz.new creds
+      nw.cleanup opts[:name]
+      node = nw.boot opts
     end
   end
+
 
   mode 'ssh' do
     argument('name') { 'node name to ssh into' }
+
     def run
-      opts = params.to_options
-      nw = NovaWhiz.new creds
-      node = nw.server_by_name opts['name']
-      exec "ssh -i ~/.ssh/keys/#{nw.keypair_name node}.pem #{nw.default_user node}@#{nw.public_ip node}"
+      opts      = params.to_options
+      nw        = NovaWhiz.new creds
+      node      = nw.server_by_name opts['name']
+      key_path  = File.expand_path('~/.ssh/hpcloud-keys/' + creds[:region] +'/'+ node.key_name)
+      exec "ssh -i #{key_path} #{nw.default_user node}@#{node.accessipv4} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
     end
   end
 
+
+  mode 'run' do
+    argument('name') { 'node name to ssh into' }
+    argument('cmd') { 'cmd to execute on remote host' }
+
+    def run
+      opts = params.to_options
+
+      res = Net::SSH::Simple.sync do
+        nw = NovaWhiz.new creds
+        node = nw.server_by_name opts['name']
+        raise "VM with name '#{opts['name']}' could not found" if node == nil
+
+        key = nw.get_key(opts['name'])
+        command_in = opts['cmd'] +"\n"
+
+        ssh(node.accessipv4,
+             '/bin/sh',
+             :user => 'ubuntu',
+             :key_data => [key],
+             :timeout => 3600,
+             :global_known_hosts_file => ['/dev/null'],
+             :user_known_hosts_file => ['/dev/null']) do |e,c,d|
+          case e
+            when :start
+              c.send_data(command_in)
+              c.eof!
+            when :stdout
+              # read the input line-wise (it *will* arrive fragmented!)
+              (@buf ||= '') << d
+              while line = @buf.slice!(/(.*)\r?\n/)
+                yield line.chomp if block_given?
+              end
+            when :stderr
+              (@buf ||= '') << d
+              while line = @buf.slice!(/(.*)\r?\n/)
+                yield line.chomp if block_given?
+              end
+          end
+        end
+      end
+      if res.exit_code != 0
+        raise "command #{opts['cmd']} failed on XXXX:\n#{res.stdout}\n#{res.stderr}"
+      end
+      STDOUT.puts res.stdout
+      res
+    end
+  end
+
+
+  #mode 'test' do
+  #  def run
+  #    nw = NovaWhiz.new creds
+  #    nw.fog_test_method
+  #  end
+  #end
 
 end
